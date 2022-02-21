@@ -32,9 +32,9 @@ const App: Component = () => {
         placeholder="Add tasks..." type="text" name="add" ref={inputBox}></input>
         <ul>
           <For each={todoList()}>{(item, i) =>
-            <li class="text-indigo-500 text-center m-2 text-3xl bg-slate-200 cursor-pointer" onclick={(e)=> {toggleTodo(item.id);
+            <li class="text-indigo-500 text-center m-2 text-3xl bg-slate-200 cursor-pointer font-semibold" onclick={(e)=> {toggleTodo(item.id);
             console.log("Item toggled.", item.completed)}}
-            className={!item.completed ? "no-underline" : "line-through"}>
+            className={!item.completed ? "no-underline" : "line-through decoration-pink-500 italic"}>
               {item.todo}
             </li>
           }</For>
