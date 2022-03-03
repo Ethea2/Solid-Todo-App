@@ -1,20 +1,25 @@
 import type { Component } from 'solid-js';
 import { createSignal, For } from 'solid-js';
 
+interface TodoItem {
+  id: number;
+  todo: string;
+  completed: boolean;
+}
+
 const App: Component = () => {
-  const [todoList, setTodoList] = createSignal([]);
-  let initialID: number = 0;
+  const [todoList, setTodoList] = createSignal<TodoItem[]>([]);
   let inputBox;
 
   const addTodo = (todo) => {
     //... basically everything before 
-    setTodoList([...todoList(), {id: ++initialID, todo, completed: false}]);
+    setTodoList((currentList) => [...currentList, {id: currentList.length, todo, completed: false}]);
   }
 
   const toggleTodo = (id) => {
     //map is basically for each element in an array -> do this
     //the "?" operator basically means {CONDITION ? TRUE : FALSE}
-    setTodoList(todoList().map((todo) => (
+    setTodoList((currentList) => currentList.map((todo) => (
       todo.id !== id ? todo : { ...todo, completed: !todo.completed }
     )));
   }
