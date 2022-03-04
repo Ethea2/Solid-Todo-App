@@ -1,11 +1,37 @@
 import type { Component } from 'solid-js';
-import { createSignal, For } from 'solid-js';
+import { createSignal, For, createResource } from 'solid-js';
+import { createClient, createQuery } from 'solid-urql';
 
 interface TodoItem {
   id: number;
   todo: string;
   completed: boolean;
 }
+
+const client = createClient({
+  url: String(import.meta.env.GQL_ENDPOINT),
+  fetchOptions: () => {
+    const token = String(import.meta.env.HASURA_GRAPHQL_ADMIN_SECRET);
+    return {
+      headers: { authorization: token ? `Bearer ${token}` : '' },
+    }
+  }
+})
+
+
+const [todos] = createResource(() =>
+  client.query(`
+  query {
+    todo_items {
+      id
+      is_complete
+      label
+    }
+  }
+  `).toPromise()
+  .then(({ data }) => console.log(data))
+);
+
 
 const App: Component = () => {
   const [todoList, setTodoList] = createSignal<TodoItem[]>([]);
