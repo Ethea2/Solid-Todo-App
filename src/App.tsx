@@ -1,52 +1,99 @@
 import type { Component } from 'solid-js';
 import { createSignal, For, createResource } from 'solid-js';
-import { createClient, createQuery } from 'solid-urql';
+import { GraphQLClient, gql } from 'graphql-request';
+
 
 interface TodoItem {
   id: number;
-  todo: string;
-  completed: boolean;
+  label: string;
+  is_complete: boolean;
 }
+/*
+async function addToDo() {
+    const token = 'klaXjD07aokfme4QqlAMc0nGiSW0Bucp9bZJ3bPlAJH37mP1PFCbymUUUbys3N62'
+    const endpoint = 'https://todo-app-neytan.hasura.app/v1/graphql'
+    
+    const client = new GraphQLClient(endpoint, {
+      headers: {
+        'x-hasura-admin-secret': `${token}`
+      }
+    })
 
-const client = createClient({
-  url: String(import.meta.env.GQL_ENDPOINT),
-  fetchOptions: () => {
-    const token = String(import.meta.env.HASURA_GRAPHQL_ADMIN_SECRET);
-    return {
-      headers: { authorization: token ? `Bearer ${token}` : '' },
-    }
+    const query = gql`
+    query MyQuery {
+      todo_items {
+        is_complete
+        id
+        label
+      }
+    }`
+
+  const data = await client.request(query)
+  console.log(JSON.stringify(data, undefined, 2))
+}
+*/
+
+const token = 'klaXjD07aokfme4QqlAMc0nGiSW0Bucp9bZJ3bPlAJH37mP1PFCbymUUUbys3N62'
+const endpoint = 'https://todo-app-neytan.hasura.app/v1/graphql'
+
+const client = new GraphQLClient(endpoint, {
+  headers: {
+    'x-hasura-admin-secret': `${token}`
   }
 })
 
-
-const [todos] = createResource(() =>
-  client.query(`
-  query {
-    todo_items {
-      id
-      is_complete
-      label
-    }
+const query = gql`
+query MyQuery {
+  todo_items {
+    id
+    label
+    is_complete
   }
-  `).toPromise()
-  .then(({ data }) => console.log(data))
-);
+}
+`
 
+
+
+
+const fetchTodoData = async () => {
+  const data = await client.request(query)
+  return data.todo_items
+}
+
+const inserTodoData = async (id, is_complete, label) => {
+  const insertQuery = gql`
+  mutation MyMutation {
+    insert_todo_items(objects: {$id: String!, is_complete: Boolean!, label: String!}) {
+      returning {
+        id
+        label
+        is_complete
+      }
+    }
+  }`
+  
+
+}
+
+fetchTodoData().then(console.log)
 
 const App: Component = () => {
   const [todoList, setTodoList] = createSignal<TodoItem[]>([]);
+  //const [todo, {mutate, refetch}] = createResource(todoList, fetchTodoData)
   let inputBox;
-
-  const addTodo = (todo) => {
+  fetchTodoData().then(setTodoList)
+  const addTodo = (label) => {
     //... basically everything before 
-    setTodoList((currentList) => [...currentList, {id: currentList.length, todo, completed: false}]);
+    //setTodoList((currentList) => [...currentList, {id: currentList.length, todo, is_complete: false}]);
+    setTodoList((currentList) => [...currentList, {id: currentList.length, label, is_complete: false}]);
+    console.log(todoList())
   }
 
   const toggleTodo = (id) => {
     //map is basically for each element in an array -> do this
     //the "?" operator basically means {CONDITION ? TRUE : FALSE}
-    setTodoList((currentList) => currentList.map((todo) => (
-      todo.id !== id ? todo : { ...todo, completed: !todo.completed }
+    setTodoList((currentList) => currentList.map((label) => (
+      label.id !== id ? label : { ...label, is_complete: !label.is_complete }
     )));
   }
   let input: string;
@@ -64,9 +111,9 @@ const App: Component = () => {
         <ul>
           <For each={todoList()}>{(item, i) =>
             <li class="text-indigo-500 text-center m-2 text-3xl bg-slate-200 cursor-pointer font-semibold" onclick={(e)=> {toggleTodo(item.id);
-            console.log("Item toggled.", item.completed)}}
-            className={!item.completed ? "no-underline" : "line-through decoration-pink-500 italic"}>
-              {item.todo}
+            console.log("Item toggled.", item.is_complete)}}
+            className={!item.is_complete ? "no-underline" : "line-through decoration-pink-500 italic"}>
+              {item.label}
             </li>
           }</For>
         </ul>
