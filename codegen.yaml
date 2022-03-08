@@ -1,0 +1,7 @@
+schema: https://todo-app-neytan.hasura.app/v1/graphql
+documents: './src/graphieql.tsx'
+generates:
+  graphql/generated.ts:
+    plugins:
+      - typescript
+      - typescript-operations
