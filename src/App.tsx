@@ -2,6 +2,7 @@ import { createSourceEventStream } from 'graphql';
 import type { Component } from 'solid-js'
 import { createSignal, For, createResource } from 'solid-js'
 import { fetchTodoData, insertTodoData, removeTodoData } from './graphieql'
+import { removeItem } from './util';
 
 
 interface TodoItem {
@@ -22,7 +23,7 @@ const App: Component = () => {
     } else { //make adding and removing reactive!!!
       insertTodoData(false ,label)
       setTodoList((currentList) => [...currentList, {id: todo()[currentList.length], label, is_complete: false}])
-      console.log(todo())
+      console.log(todoList())
     }
   }
 
@@ -34,7 +35,8 @@ const App: Component = () => {
 
   const deleteData = (label) => {
     removeTodoData(label)
-    setTodoList(() => [todo()])
+    removeItem(todoList(), label) //make removing items reactive
+    //console.log(newSet)
   }
 
   let input: string
@@ -50,7 +52,7 @@ const App: Component = () => {
         focus:border-sky-500 focus:ring-sky-500 focus:ring-1 sm:text-sm"
         placeholder="Add tasks..." type="text" name="add" ref={inputBox}></input>
         <ul>
-          <For each={todo()}>{(item, i) =>
+          <For each={todoList()}>{(item, i) =>
             <div class="flex">
               <div class="flex-auto w-full">
                 <li class="text-indigo-500 text-center m-2.5 text-3xl bg-slate-200 cursor-pointer font-semibold" onclick={(e)=> {toggleTodo(item.id)
