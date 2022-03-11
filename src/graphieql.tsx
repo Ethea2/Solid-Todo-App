@@ -7,12 +7,12 @@ const client = createClientInstance();
 export async function fetchTodoData() {
     const query = gql`
     query MyQuery {
-    todo_items {
-        id
-        label
-        is_complete
+        todo_items(order_by: {updated_at: desc}) {
+          id
+          is_complete
+          label
         }
-    }
+      }
     `
     const data = await client.request(query)
     return data.todo_items
@@ -21,34 +21,59 @@ export async function fetchTodoData() {
 
 export async function insertTodoData(is_complete, label) {
     const insertQuery = gql`
-    mutation MyMutation($is_complete: Boolean!, $label: String!) {
-        insert_todo_items(objects: {is_complete: $is_complete, label: $label}) {
-        affected_rows
+    mutation MyMutation($label: String!, $is_complete: Boolean!) {
+        todo: insert_todo_items_one(object: {is_complete: $is_complete, label: $label}) {
+          is_complete
+          label
+          id
         }
-    }
+      }
     `
     const dataToInsert = {
         is_complete: is_complete,
         label: label
     }
 
-    await client.request(insertQuery, dataToInsert)
+    return client.request(insertQuery, dataToInsert)
 }
 
-export async function removeTodoData(label) {
+
+interface RemoveTodo {
+    todo: {
+        id: string
+    }
+}
+
+export async function removeTodoData(id): Promise<RemoveTodo> {
     const removeQuery = gql`
-    mutation MyMutation($_eq: String!) {
-        delete_todo_items(where: {label: {_eq: $_eq}}) {
-          returning {
-            label
-          }
+    mutation MyMutation($id: uuid = "") {
+        todo: delete_todo_items_by_pk(id: $id) {
+          id
         }
       }
     `
 
     const dataToDelete = {
-        _eq: label
+        id: id
     }
 
-    await client.request(removeQuery, dataToDelete)
+    return client.request(removeQuery, dataToDelete)
+}
+
+export async function updateTodoIsComplete(id: string, is_complete: boolean) {
+    const updateQuery = gql`
+    mutation MyMutation($id: uuid!, $is_complete: Boolean!) {
+        todo: update_todo_items_by_pk(pk_columns: {id: $id}, _set: {is_complete: $is_complete}) {
+          label
+          is_complete
+          id
+        }
+      }
+      `
+    const dataToUpdate = {
+        id,
+        is_complete
+    }
+
+    return client.request(updateQuery, dataToUpdate)
 }
